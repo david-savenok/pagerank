@@ -2,6 +2,7 @@ import os
 import random
 import re
 import sys
+from unittest import result
 
 DAMPING = 0.85
 SAMPLES = 10000
@@ -57,7 +58,18 @@ def transition_model(corpus, page, damping_factor):
     linked to by `page`. With probability `1 - damping_factor`, choose
     a link at random chosen from all pages in the corpus.
     """
-    raise NotImplementedError
+    linked_pages = corpus[page]
+    starting_percent = 1/len(linked_pages)
+    random_percent = (1-damping_factor)/(len(linked_pages) + 1)
+    result_dict = dict()
+    for linked_page in linked_pages:
+        result_dict[linked_page] = starting_percent * damping_factor
+        result_dict[linked_page] += random_percent
+
+    result_dict[page] = random_percent
+
+    print(result_dict)
+    return result_dict
 
 
 def sample_pagerank(corpus, damping_factor, n):
@@ -69,7 +81,17 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    freq_dict = dict.fromkeys(corpus.keys(), 0)
+    current_page = None
+    if not current_page:
+        current_page = random.choice(corpus.keys())
+        freq_dict[current_page] += 1
+    
+    for sample in range(n):
+        current_transition = transition_model(corpus, current_page, damping_factor)
+        random_percent = random.random()
+        # figure out how to pick a new page based off of their probabilities
+
 
 
 def iterate_pagerank(corpus, damping_factor):
