@@ -68,7 +68,6 @@ def transition_model(corpus, page, damping_factor):
 
     result_dict[page] = random_percent
 
-    print(result_dict)
     return result_dict
 
 
@@ -82,16 +81,25 @@ def sample_pagerank(corpus, damping_factor, n):
     PageRank values should sum to 1.
     """
     freq_dict = dict.fromkeys(corpus.keys(), 0)
+    
+    # Starts initial sample randomly
     current_page = None
     if not current_page:
-        current_page = random.choice(corpus.keys())
+        current_page = random.choice(list(corpus.keys()))
         freq_dict[current_page] += 1
     
-    for sample in range(n):
+    # Runs n-1 samples based of current_page's transition model each time
+    for sample in range(n-1):
         current_transition = transition_model(corpus, current_page, damping_factor)
-        random_percent = random.random()
-        # figure out how to pick a new page based off of their probabilities
+        random_sample = (random.choices(list(current_transition.keys()), weights=current_transition.values(), k=1))[0]
+        current_page = random_sample
+        freq_dict[random_sample] += 1
 
+    pagerank_dict = dict.fromkeys(corpus.keys(), 0)
+    # Dictionary comprehension makes new dictionary with ratios of sample numbers for pagerank values
+    pagerank_dict = {key:(freq_dict[key])/SAMPLES for (key, value) in freq_dict.items()}
+    
+    return pagerank_dict
 
 
 def iterate_pagerank(corpus, damping_factor):
