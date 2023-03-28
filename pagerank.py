@@ -59,9 +59,18 @@ def transition_model(corpus, page, damping_factor):
     a link at random chosen from all pages in the corpus.
     """
     linked_pages = corpus[page]
-    starting_percent = 1/len(linked_pages)
-    random_percent = (1-damping_factor)/(len(linked_pages) + 1)
     result_dict = dict()
+
+    # If no linked pages, equal distribution. Otherwise assign probability manually
+    if len(linked_pages) == 0:
+        for key in corpus.keys():
+            result_dict[key] = 1/len(corpus.keys())
+        return result_dict
+    else:
+        starting_percent = 1/len(linked_pages)
+    
+    # Adds an equally likely percent for each linked page (times the damping factor) and then adds the remainder percent split evenly (including given page)
+    random_percent = (1-damping_factor)/(len(linked_pages) + 1)
     for linked_page in linked_pages:
         result_dict[linked_page] = starting_percent * damping_factor
         result_dict[linked_page] += random_percent
@@ -111,8 +120,44 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    pagerank_dict = dict.fromkeys(corpus.keys(), 1/(len(corpus.keys())))
+    test_dict = pagerank_dict.copy()
+    while True:
+        # Check if dictionary values between N and N+1 differ by more than .001 (if not, break while loop)
+        is_done = False  
+        for key,value in pagerank_dict.items():        
+            if abs(value - test_dict[key]) >= .001 or value == test_dict[key]:    
+                test_dict = pagerank_dict.copy()
+                is_done = False
+                break  
+            is_done = True 
 
+        if is_done:
+            break
+        
+        # Calculates pagerank for each main page
+        for main_page in pagerank_dict.keys():
+            # Initial random assigned probability
+            current_pagerank = (1-damping_factor)/len(corpus.keys())
+            
+            # Creates a list of all pages that link to the main page
+            pages_linking_to = []
+            for sub_page in pagerank_dict.keys():
+                if len(corpus[sub_page]) == 0:
+                    pages_linking_to.append(sub_page)
+                if main_page in corpus[sub_page]:
+                    pages_linking_to.append(sub_page)
+            
+            # Summation set up based on pageranks of all pages that link to the main page (multiplied by damping_factor)
+            secondary_value = 0 
+            for page in pages_linking_to:
+                numlinks = len(corpus[page])
+                if numlinks == 0: numlinks = len(corpus.keys())
+                secondary_value += (pagerank_dict[page]/numlinks)
+            secondary_value *= damping_factor
+            pagerank_dict[main_page] = current_pagerank + secondary_value
+    return pagerank_dict
 
+    
 if __name__ == "__main__":
     main()
